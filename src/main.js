@@ -1,336 +1,122 @@
-import { chapters, pigments, recipes, glossary, safety } from "./data.js";
+import { chapters, pigments, recipes, glossary, safety, colorPigmentChart, whereToUse, colorTheory, sources } from "./data.js";
+
+const chartAsPigments = colorPigmentChart.map((p, i) => ({
+  id: `chart-${i}-${p.name.toLowerCase().replace(/[^a-z0-9]+/g,"-")}`,
+  name: p.name,
+  family: p.family,
+  hue: p.color,
+  hex: familyColour(p.family),
+  formula: "See pigment chart / Colour Index reference",
+  material: `${cap(p.type)} pigment; ${p.color}.`,
+  behaviour: `${cap(p.transparency)}; staining: ${p.staining}; ASTM lightfastness: ${p.lightfastness}.`,
+  transformation: "Profile from the pigment chart; consult the source references for chemistry and manufacturing detail.",
+  history: "Included as a working artist-pigment reference in the colour chart.",
+  source: "Color: A Practical Guide to Color and Its Uses in Art",
+  chart: true,
+  transparency: p.transparency,
+  staining: p.staining,
+  lightfastness: p.lightfastness,
+  type: p.type
+}));
+
+const allPigments = [...pigments, ...chartAsPigments];
 
 const state = {
-  page: "home",
-  search: "",
-  filter: "all",
-  selectedPigment: null,
-  selectedRecipe: null,
-  recipeStep: 0,
+  page: "home", search: "", filter: "all", pigmentMode: "all",
+  selectedPigment: null, selectedRecipe: null, recipeStep: 0,
+  language: localStorage.getItem("pigment-lab-language") || "en",
   journal: JSON.parse(localStorage.getItem("pigment-lab-journal") || "[]")
 };
 
 const app = document.querySelector("#app");
+function cap(s=""){ return s.charAt(0).toUpperCase()+s.slice(1); }
+function familyColour(f){return ({Red:"#a84a3f",Purple:"#72527f",Blue:"#3e6693",Green:"#56785a",Yellow:"#c8a53e",Earth:"#8b633e",Black:"#34312c",White:"#d8d5ce"}[f]||"#927b5c");}
+function esc(s=""){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));}
+function t(en,mm){return state.language==="mm"?mm:en;}
+function icon(name){return {home:"⌂",pigment:"◉",recipe:"⚗",history:"◌",chemistry:"△",where:"◒",theory:"◈",journal:"✎",glossary:"?",safety:"!",sources:"◎"}[name]||"•";}
+function persist(){localStorage.setItem("pigment-lab-journal",JSON.stringify(state.journal));}
 
-function esc(s="") {
-  return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
-}
-
-function icon(name) {
-  const icons = {
-    home:"⌂", pigment:"◉", recipe:"⚗", history:"◌", chemistry:"△", journal:"✎", glossary:"?", safety:"!"
-  };
-  return icons[name] || "•";
-}
-
-function persist() {
-  localStorage.setItem("pigment-lab-journal", JSON.stringify(state.journal));
-}
-
-function layout(content) {
-  return `
-    <div class="shell">
-      <aside class="sidebar">
-        <div class="brand" onclick="navigate('home')">
-          <div class="brand-mark">P</div>
-          <div>
-            <strong>NATURAL<br>PIGMENT LAB</strong>
-            <span>material • colour • process</span>
-          </div>
+function layout(content){
+  return `<div class="shell">
+    <aside class="sidebar">
+      <div class="brand" onclick="navigate('home')"><div class="brand-mark">P</div><div><strong>NATURAL<br>PIGMENT LAB</strong><span>material • colour • process</span></div></div>
+      <nav>
+        ${navItem("home","home",t("Home","ပင်မစာမျက်နှာ"))}
+        ${navItem("pigments","pigment",t("Pigment Library","Pigment စာကြည့်တိုက်"))}
+        ${navItem("recipes","recipe",t("Recipe Lab","ဖော်စပ်ခန်း"))}
+        ${navItem("history","history",t("Pigment History","Pigment သမိုင်း"))}
+        ${navItem("chemistry","chemistry",t("Chemistry","ဓါတုဗေဒ"))}
+        ${navItem("where","where",t("Where to Use","ဘယ်မှာသုံးမလဲ"))}
+        ${navItem("theory","theory",t("Color Theory","အရောင်ဘာသာဗေဒ"))}
+        ${navItem("journal","journal",t("My Journal","ကိုယ်ပိုင်မှတ်တမ်း"))}
+        ${navItem("glossary","glossary",t("Glossary","ဝေါဟာရ"))}
+        ${navItem("safety","safety",t("Safety","လုံခြုံရေး"))}
+        ${navItem("sources","sources",t("Sources","ရင်းမြစ်များ"))}
+      </nav>
+      <div class="side-note"><span>${t("SOURCE LIBRARY","ရင်းမြစ်စာကြည့်တိုက်")}</span><b>${sources.length} sources</b><small>Book + open web reference</small></div>
+    </aside>
+    <main class="main">
+      <header class="topbar">
+        <button class="mobile-menu" onclick="toggleMenu()">☰</button>
+        <button class="mobile-home" onclick="navigate('home')">⌂</button>
+        <div class="crumb">Natural Pigment Lab <span>/</span> ${crumb()}</div>
+        <div class="top-actions">
+          <button class="lang-switch" onclick="toggleLanguage()">${state.language==="en"?"မြန်မာ":"English"}</button>
+          <div class="search-box"><span>⌕</span><input value="${esc(state.search)}" oninput="setSearch(this.value)" placeholder="${t("Search pigment, recipe, theory...","Pigment၊ recipe၊ theory ရှာရန်...")}" /></div>
         </div>
-        <nav>
-          ${navItem("home","home","Home")}
-          ${navItem("pigments","pigment","Pigment Library")}
-          ${navItem("recipes","recipe","Recipe Lab")}
-          ${navItem("history","history","Pigment History")}
-          ${navItem("chemistry","chemistry","Chemistry")}
-          ${navItem("journal","journal","My Journal")}
-          ${navItem("glossary","glossary","Glossary")}
-          ${navItem("safety","safety","Safety")}
-        </nav>
-        <div class="side-note">
-          <span>BASED ON</span>
-          <b>Lucy Mayes</b>
-          <small>The Natural Pigment Handbook</small>
-        </div>
-      </aside>
-      <main class="main">
-        <header class="topbar">
-          <button class="mobile-menu" onclick="toggleMenu()">☰</button>
-          <div class="crumb">${crumb()}</div>
-          <div class="top-actions">
-            <div class="search-box">
-              <span>⌕</span>
-              <input value="${esc(state.search)}" oninput="setSearch(this.value)" placeholder="Search pigment, recipe, chemistry..." />
-            </div>
-          </div>
-        </header>
-        <div class="content">${content}</div>
-        <footer>
-          <span>Natural Pigment Lab · educational material-study interface</span>
-          <span>Source study: Lucy Mayes, <i>The Natural Pigment Handbook</i></span>
-        </footer>
-      </main>
-    </div>
-  `;
-}
-
-function navItem(page, ico, label) {
-  return `<button class="${state.page===page ? "active":""}" onclick="navigate('${page}')"><span>${icon(ico)}</span>${label}</button>`;
-}
-
-function crumb() {
-  const names = {home:"Home",pigments:"Pigment Library",recipes:"Recipe Lab",history:"Pigment History",chemistry:"Chemistry",journal:"My Journal",glossary:"Glossary",safety:"Safety"};
-  return `Natural Pigment Lab <span>/</span> ${names[state.page] || "Home"}`;
-}
-
-function render() {
-  const body = {
-    home: homePage,
-    pigments: pigmentPage,
-    recipes: recipePage,
-    history: historyPage,
-    chemistry: chemistryPage,
-    journal: journalPage,
-    glossary: glossaryPage,
-    safety: safetyPage
-  }[state.page] || homePage;
-  app.innerHTML = layout(body());
-  if (state.selectedPigment) openPigmentModal(state.selectedPigment);
-  if (state.selectedRecipe) openRecipeModal(state.selectedRecipe);
-}
-
-function homePage() {
-  return `
-    <section class="hero">
-      <div class="hero-copy">
-        <div class="eyebrow">A MAKER'S DIGITAL WORKBENCH</div>
-        <h1>Where colour<br><em>comes from.</em></h1>
-        <p>Explore pigment as material, history and chemistry — from earth and mineral particles to plant dyes, lakes, binders and waste-stream colour.</p>
-        <div class="hero-buttons">
-          <button class="primary" onclick="navigate('pigments')">Explore Pigments <span>→</span></button>
-          <button class="ghost" onclick="navigate('recipes')">Open Recipe Lab</button>
-        </div>
-      </div>
-      <div class="hero-art">
-        <div class="orbit o1"></div><div class="orbit o2"></div>
-        <div class="pigment-orb"></div>
-        <span class="float-tag t1">EARTH</span><span class="float-tag t2">PLANT</span><span class="float-tag t3">MINERAL</span>
-      </div>
-    </section>
-
-    <section class="intro-grid">
-      <article class="intro-card dark">
-        <span class="card-no">01</span><h3>History</h3>
-        <p>500,000+ years of earth colour, cultural practice, alchemy and the transition to modern chemistry.</p>
-        <button onclick="navigate('history')">Enter history →</button>
-      </article>
-      <article class="intro-card">
-        <span class="card-no">02</span><h3>Material</h3>
-        <p>Understand pigment particles, substrates, binders, granulation, density and refractive behaviour.</p>
-        <button onclick="navigate('chemistry')">Study material →</button>
-      </article>
-      <article class="intro-card warm">
-        <span class="card-no">03</span><h3>Making</h3>
-        <p>Follow interactive recipe cards for calcination, lakes, woad, binders, mineral processing and more.</p>
-        <button onclick="navigate('recipes')">Make a pigment →</button>
-      </article>
-    </section>
-
-    <section class="section-head">
-      <div><div class="eyebrow">PIGMENT OF THE DAY</div><h2>Yellow Ochre</h2></div>
-      <button class="text-btn" onclick="showPigment('yellow-ochre')">View profile →</button>
-    </section>
-    <section class="feature-pigment">
-      <div class="colour-block" style="--swatch:#C7A34B"><div class="swatch-large"></div></div>
-      <div class="feature-copy">
-        <div class="tag">EARTH · YELLOW</div>
-        <h3>Iron, water, time.</h3>
-        <p>Yellow ochre is described as hydrated iron oxide hydroxide carried by clay minerals. Heat can transform its mineral state and move the colour toward red.</p>
-        <div class="spec-row"><span>FORMULA</span><b>α-FeO(OH) + clay</b></div>
-        <div class="spec-row"><span>TRANSFORMATION</span><b>Calcination → warmer reds</b></div>
-      </div>
-    </section>
-
-    <section class="section-head">
-      <div><div class="eyebrow">QUICK START</div><h2>Choose a path</h2></div>
-    </section>
-    <div class="quick-grid">
-      <button onclick="navigate('pigments')"><span>◉</span><b>Browse colours</b><small>Profiles, formulas & behaviour</small></button>
-      <button onclick="navigate('recipes')"><span>⚗</span><b>Make something</b><small>Step-by-step material recipes</small></button>
-      <button onclick="navigate('chemistry')"><span>△</span><b>Understand why</b><small>Material science in plain language</small></button>
-      <button onclick="navigate('journal')"><span>✎</span><b>Record a batch</b><small>Keep your own pigment notes</small></button>
-    </div>
-  `;
-}
-
-function pigmentPage() {
-  const q = state.search.toLowerCase();
-  const list = pigments.filter(p => {
-    const matches = !q || `${p.name} ${p.family} ${p.hue} ${p.material} ${p.formula}`.toLowerCase().includes(q);
-    const filter = state.filter === "all" || p.family.toLowerCase().includes(state.filter);
-    return matches && filter;
-  });
-  const families = [...new Set(pigments.map(p=>p.family))];
-  return `
-    <div class="page-title"><div><div class="eyebrow">LIBRARY</div><h1>Pigment Library</h1><p>Material profiles arranged as a working colour cabinet.</p></div><div class="count">${list.length} pigments</div></div>
-    <div class="filterbar"><button class="${state.filter==='all'?'sel':''}" onclick="setFilter('all')">All</button>${families.map(f=>`<button class="${state.filter===f.toLowerCase()?'sel':''}" onclick="setFilter('${f.toLowerCase()}')">${f}</button>`).join("")}</div>
-    <div class="pigment-grid">${list.map(p=>pigmentCard(p)).join("")}</div>
-  `;
-}
-
-function pigmentCard(p) {
-  return `<button class="pigment-card" onclick="showPigment('${p.id}')">
-    <div class="pigment-swatch" style="background:${p.hex}"><span>${esc(p.hue)}</span></div>
-    <div class="pigment-info"><div class="tag">${esc(p.family)}</div><h3>${esc(p.name)}</h3><p>${esc(p.material)}</p><div class="mini-spec"><span>${esc(p.formula)}</span><span>→</span></div></div>
-  </button>`;
-}
-
-function recipePage() {
-  const q = state.search.toLowerCase();
-  const list = recipes.filter(r => !q || `${r.title} ${r.pigment} ${r.type} ${r.chapter} ${r.science}`.toLowerCase().includes(q));
-  return `
-    <div class="page-title"><div><div class="eyebrow">WORKBENCH</div><h1>Recipe Lab</h1><p>Interactive making cards. Start small, observe, record, repeat.</p></div><div class="count">${list.length} recipes</div></div>
-    <div class="recipe-list">${list.map((r,i)=>recipeRow(r,i)).join("")}</div>
-  `;
-}
-
-function recipeRow(r,i) {
-  const chapter = chapters.find(c=>c.id===r.chapter);
-  return `<button class="recipe-row" onclick="showRecipe('${r.id}')">
-    <div class="recipe-num">${String(i+1).padStart(2,"0")}</div>
-    <div class="recipe-main"><div class="tag">${esc(r.type)} · ${esc(chapter?.title || "")}</div><h3>${esc(r.title)}</h3><p>${esc(r.pigment)}</p></div>
-    <div class="recipe-meta"><span>${esc(r.difficulty)}</span><span>${esc(r.duration)}</span><b>→</b></div>
-  </button>`;
-}
-
-function historyPage() {
-  return `
-    <div class="page-title"><div><div class="eyebrow">CHAPTER ONE</div><h1>Pigment History</h1><p>A material timeline built from the historical themes of the source book.</p></div></div>
-    <div class="timeline">
-      <div class="time-item"><div class="time-date">500,000+ BCE</div><div><h3>Earth colour</h3><p>Ochre and other earth pigments appear as some of humanity's earliest colour materials.</p></div></div>
-      <div class="time-item"><div class="time-date">Ancient world</div><div><h3>Mineral processing</h3><p>Grinding, levigation and heating allow natural materials to be refined and transformed.</p></div></div>
-      <div class="time-item"><div class="time-date">Medieval</div><div><h3>Colour trades</h3><p>Apothecaries, colour sellers and specialist suppliers become part of the artist's material ecosystem.</p></div></div>
-      <div class="time-item"><div class="time-date">Alchemy → chemistry</div><div><h3>Controlled transformation</h3><p>Pigment making moves toward systematic chemical experimentation and reproducible synthetic colour.</p></div></div>
-      <div class="time-item"><div class="time-date">18th–19th c.</div><div><h3>Industrial colour</h3><p>Synthetic dyes and pigments expand the available palette and change the relationship between artist and material.</p></div></div>
-      <div class="time-item"><div class="time-date">21st century</div><div><h3>Back to earth</h3><p>Handmade pigments, local materials, waste streams and sustainable practice reconnect artists with material origins.</p></div></div>
-    </div>
-    <div class="quote-card"><span>“LET’S GO BACK TO EARTH.”</span><p>The book frames pigment making not only as technique, but as a relationship between colour, material provenance and the living world.</p></div>
-  `;
-}
-
-function chemistryPage() {
-  const concepts = [
-    ["01","Pigment vs Dye","A pigment is generally insoluble in its working medium. A dye is soluble. Lake making is one bridge between the two: a soluble colourant is fixed into an insoluble solid."],
-    ["02","Particle size","Grinding changes surface area, settling, texture and the way light is scattered. Two samples with the same chemistry can paint differently if their particle morphology differs."],
-    ["03","Calcination","Heat can change the mineral state of earth pigments. In iron-bearing earths, dehydration can move goethite toward hematite and change yellow/brown hues toward red/warm tones."],
-    ["04","Laking","Metal salts and alkaline conditions can create a solid substrate that captures a soluble dye. The visible clouding and precipitate are part of the transformation."],
-    ["05","Oxidation","Some colour systems change when exposed to oxygen. Woad's indigo chemistry and vivianite's colour development are examples discussed in the book."],
-    ["06","Binder","Pigment particles need a medium that holds them to the support. Gum, casein, egg and local tree sap behave differently because their chemistry and film-forming properties differ."]
-  ];
-  return `
-    <div class="page-title"><div><div class="eyebrow">MATERIAL SCIENCE</div><h1>Why does the colour change?</h1><p>Tap a concept to connect the visible colour to the material process.</p></div></div>
-    <div class="chem-grid">${concepts.map(c=>`<article class="chem-card"><span>${c[0]}</span><h3>${c[1]}</h3><p>${c[2]}</p></article>`).join("")}</div>
-    <section class="process-strip">
-      <div><b>RAW MATERIAL</b><span>earth · plant · mineral · waste</span></div><i>→</i>
-      <div><b>PROCESS</b><span>grind · wash · heat · extract · react</span></div><i>→</i>
-      <div><b>PIGMENT</b><span>particle · colour · structure</span></div><i>→</i>
-      <div><b>PAINT</b><span>pigment + binder + support</span></div>
-    </section>
-  `;
-}
-
-function journalPage() {
-  return `
-    <div class="page-title"><div><div class="eyebrow">YOUR WORKBENCH</div><h1>My Pigment Journal</h1><p>Record experiments locally in this browser. Nothing is uploaded.</p></div></div>
-    <div class="journal-form">
-      <input id="jName" placeholder="Batch / pigment name" />
-      <input id="jDate" type="date" value="${new Date().toISOString().slice(0,10)}" />
-      <textarea id="jNotes" placeholder="Material source, quantities, temperature, pH, colour, texture, what happened..."></textarea>
-      <button class="primary" onclick="addJournal()">Save batch</button>
-    </div>
-    <div class="journal-list">${state.journal.length ? state.journal.slice().reverse().map((j,i)=>`<article class="journal-entry"><div><span>${esc(j.date)}</span><h3>${esc(j.name)}</h3></div><p>${esc(j.notes)}</p><button onclick="deleteJournal(${state.journal.length-1-i})">×</button></article>`).join("") : `<div class="empty">Your first pigment experiment will appear here.</div>`}</div>
-  `;
-}
-
-function glossaryPage() {
-  return `
-    <div class="page-title"><div><div class="eyebrow">REFERENCE</div><h1>Glossary</h1><p>Small definitions for the language of pigment making.</p></div></div>
-    <div class="glossary">${glossary.map(([a,b])=>`<article><h3>${esc(a)}</h3><p>${esc(b)}</p></article>`).join("")}</div>
-  `;
-}
-
-function safetyPage() {
-  return `
-    <div class="page-title"><div><div class="eyebrow">READ BEFORE MAKING</div><h1>Safety & Responsible Practice</h1><p>Natural does not automatically mean harmless. Treat every material as a material study.</p></div></div>
-    <div class="warning-box"><strong>⚠ WORK SMALL · WORK CLEAN · RECORD EVERYTHING</strong><p>Some processes involve heat, dust, alkaline solutions, acids, metal salts or copper compounds. Use appropriate PPE and ventilation, and never use food equipment.</p></div>
-    <div class="safety-list">${safety.map((s,i)=>`<div><b>${String(i+1).padStart(2,"0")}</b><p>${esc(s)}</p></div>`).join("")}</div>
-  `;
-}
-
-function openPigmentModal(id) {
-  const p = pigments.find(x=>x.id===id); if(!p) return;
-  const related = recipes.filter(r=>r.pigment.toLowerCase().includes(p.name.toLowerCase().split(" / ")[0].toLowerCase()) || r.title.toLowerCase().includes(p.name.toLowerCase().split(" ")[0].toLowerCase()));
-  const el = document.createElement("div"); el.className="modal-backdrop"; el.onclick=e=>{if(e.target===el)closeModal()};
-  el.innerHTML=`<div class="modal">
-    <button class="close" onclick="closeModal()">×</button>
-    <div class="modal-swatch" style="background:${p.hex}"></div>
-    <div class="tag">${esc(p.family)} · ${esc(p.hue)}</div><h2>${esc(p.name)}</h2>
-    <p class="lead">${esc(p.material)}</p>
-    <div class="modal-specs">
-      <div><span>CHEMISTRY</span><b>${esc(p.formula)}</b></div>
-      <div><span>BEHAVIOUR</span><b>${esc(p.behaviour)}</b></div>
-      <div><span>TRANSFORMATION</span><b>${esc(p.transformation)}</b></div>
-      <div><span>HISTORY</span><b>${esc(p.history)}</b></div>
-    </div>
-    <div class="modal-section"><h3>Study source</h3><p>${esc(p.source)} of <i>The Natural Pigment Handbook</i>.</p></div>
-    ${related.length?`<div class="modal-section"><h3>Related making</h3>${related.map(r=>`<button class="related" onclick="closeModal();showRecipe('${r.id}')">${esc(r.title)} →</button>`).join("")}</div>`:""}
+      </header>
+      <div class="content">${content}</div>
+      <footer><span>Natural Pigment Lab · educational material-study interface</span><span>${t("Source library: pigment-making + colour theory + open chemistry reference","ရင်းမြစ်များ — pigment making + colour theory + open chemistry reference")}</span></footer>
+    </main>
   </div>`;
-  document.body.appendChild(el);
+}
+function navItem(page,ico,label){return `<button class="${state.page===page?"active":""}" onclick="navigate('${page}')"><span>${icon(ico)}</span>${label}</button>`;}
+function crumb(){const n={home:t("Home","ပင်မ"),pigments:t("Pigment Library","Pigment စာကြည့်တိုက်"),recipes:t("Recipe Lab","ဖော်စပ်ခန်း"),history:t("Pigment History","Pigment သမိုင်း"),chemistry:t("Chemistry","ဓါတုဗေဒ"),where:t("Where to Use","ဘယ်မှာသုံးမလဲ"),theory:t("Color Theory","အရောင်ဘာသာဗေဒ"),journal:t("My Journal","မှတ်တမ်း"),glossary:t("Glossary","ဝေါဟာရ"),safety:t("Safety","လုံခြုံရေး"),sources:t("Sources","ရင်းမြစ်များ")};return n[state.page]||n.home;}
+function render(){
+  const body={home:homePage,pigments:pigmentPage,recipes:recipePage,history:historyPage,chemistry:chemistryPage,where:wherePage,theory:theoryPage,journal:journalPage,glossary:glossaryPage,safety:safetyPage,sources:sourcesPage}[state.page]||homePage;
+  app.innerHTML=layout(body());
+  if(state.selectedPigment) openPigmentModal(state.selectedPigment);
+  if(state.selectedRecipe) openRecipeModal(state.selectedRecipe);
+  if(state.page!=="home") document.body.classList.remove("menu-open");
 }
 
-function openRecipeModal(id) {
-  const r=recipes.find(x=>x.id===id); if(!r) return;
-  const chapter=chapters.find(c=>c.id===r.chapter);
-  const step=Math.min(state.recipeStep,r.steps.length-1);
-  const el=document.createElement("div"); el.className="modal-backdrop"; el.onclick=e=>{if(e.target===el)closeModal()};
-  el.innerHTML=`<div class="modal recipe-modal">
-    <button class="close" onclick="closeModal()">×</button>
-    <div class="eyebrow">${esc(r.type)} · ${esc(chapter?.title||"")}</div>
-    <h2>${esc(r.title)}</h2><p class="lead">${esc(r.pigment)}</p>
-    <div class="risk-line"><span>${esc(r.difficulty)}</span><span>${esc(r.duration)}</span><span>⚠ ${esc(r.risk)}</span></div>
-    <div class="recipe-cols">
-      <aside><h3>Ingredients</h3><ul>${r.ingredients.map(x=>`<li>${esc(x)}</li>`).join("")}</ul><h3>Equipment</h3><ul>${r.equipment.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></aside>
-      <section>
-        <div class="science-note"><b>WHY IT WORKS</b><p>${esc(r.science)}</p></div>
-        <div class="stepper">
-          <div class="step-count">STEP ${String(step+1).padStart(2,"0")} / ${String(r.steps.length).padStart(2,"0")}</div>
-          <h3>${esc(r.steps[step])}</h3>
-          <div class="progress">${r.steps.map((_,i)=>`<button class="${i<=step?'done':''}" onclick="recipeGo(${i})"></button>`).join("")}</div>
-          <div class="step-actions"><button ${step===0?'disabled':''} onclick="recipeGo(${step-1})">← Previous</button><button ${step===r.steps.length-1?'disabled':''} onclick="recipeGo(${step+1})">Next →</button></div>
-        </div>
-        <div class="source-note">${esc(r.note)}</div>
-      </section>
-    </div>
-  </div>`;
-  document.body.appendChild(el);
-}
+function homePage(){return `
+<section class="hero"><div class="hero-copy"><div class="eyebrow">${t("A MAKER'S DIGITAL WORKBENCH","အရောင်ဖော်စပ်သူ၏ DIGITAL WORKBENCH")}</div><h1>${t("Where colour<br><em>comes from.</em>","အရောင်ဟာ<br><em>ဘယ်ကလာသလဲ။</em>")}</h1><p>${t("Explore pigment as material, history, chemistry and artistic language — from earth and mineral particles to plant dyes, lakes, modern pigments and practical colour use.","Pigment ကို ပစ္စည်း၊ သမိုင်း၊ ဓါတုဗေဒနဲ့ ပန်းချီအရောင်ဘာသာဗေဒအဖြစ် လေ့လာပါ — မြေသားနဲ့ သတ္တုကနေ အပင်ဆိုးဆေး၊ lake pigment၊ ခေတ်သစ် pigment နဲ့ လက်တွေ့အသုံးချမှုအထိ။")}</p><div class="hero-buttons"><button class="primary" onclick="navigate('pigments')">${t("Explore Pigments →","Pigment တွေကြည့်မယ် →")}</button><button class="ghost" onclick="navigate('where')">${t("Where to Use","ဘယ်မှာသုံးမလဲ")}</button></div></div><div class="hero-art"><div class="orbit o1"></div><div class="orbit o2"></div><div class="pigment-orb"></div><span class="float-tag t1">EARTH</span><span class="float-tag t2">COLOUR</span><span class="float-tag t3">CHEMISTRY</span></div></section>
+<section class="intro-grid"><article class="intro-card dark"><span class="card-no">01</span><h3>${t("History","သမိုင်း")}</h3><p>${t("From prehistoric earth colours to synthetic chemistry and modern pigment manufacture.","ရှေးဦးမြေသားအရောင်တွေကနေ synthetic chemistry နဲ့ ခေတ်သစ် pigment manufacturing အထိ။")}</p><button onclick="navigate('history')">${t("Enter history →","သမိုင်းထဲဝင်မယ် →")}</button></article><article class="intro-card"><span class="card-no">02</span><h3>${t("Material","ပစ္စည်း")}</h3><p>${t("Particle structure, opacity, staining, lightfastness, binders, dispersion and crystal behaviour.","Particle structure၊ opacity၊ staining၊ lightfastness၊ binder၊ dispersion နဲ့ crystal behaviour ကို လေ့လာပါ။")}</p><button onclick="navigate('chemistry')">${t("Study material →","ပစ္စည်းသိပ္ပံလေ့လာမယ် →")}</button></article><article class="intro-card warm"><span class="card-no">03</span><h3>${t("Practice","လက်တွေ့")}</h3><p>${t("Recipes plus a practical guide for choosing colour by medium, effect and composition.","Recipe တွေအပြင် medium၊ effect နဲ့ composition အလိုက် အရောင်ရွေးချယ်သုံးစွဲနည်းပါ ပါဝင်ပါတယ်။")}</p><button onclick="navigate('recipes')">${t("Open the lab →","Lab ဖွင့်မယ် →")}</button></article></section>
+<section class="section-head"><div><div class="eyebrow">PIGMENT OF THE DAY</div><h2>Yellow Ochre</h2></div><button class="text-btn" onclick="showPigment('yellow-ochre')">View profile →</button></section><section class="feature-pigment"><div class="colour-block" style="--swatch:#C7A34B"><div class="swatch-large"></div></div><div class="feature-copy"><div class="tag">EARTH · YELLOW</div><h3>${t("Iron, water, time.","သံဓါတ်၊ ရေ၊ အချိန်။")}</h3><p>${t("An earth pigment whose mineral state can change with processing and heat. Its story connects geology, chemistry and painting.","မြေသားထဲက သံဓါတ်ပါဝင်တဲ့ pigment ဖြစ်ပြီး processing နဲ့ အပူပေးမှုကြောင့် mineral state နဲ့ အရောင်ပြောင်းနိုင်ပါတယ်။")}</p><div class="spec-row"><span>FORMULA</span><b>α-FeO(OH) + clay</b></div><div class="spec-row"><span>TRANSFORMATION</span><b>Calcination → warmer reds</b></div></div></section>
+<section class="section-head"><div><div class="eyebrow">QUICK START</div><h2>${t("Choose a path","လေ့လာမယ့်လမ်းကြောင်းရွေးပါ")}</h2></div></section><div class="quick-grid"><button onclick="navigate('pigments')"><span>◉</span><b>${t("Browse colours","အရောင်တွေကြည့်မယ်")}</b><small>${t("Natural + artist pigment chart","Natural + artist pigment chart")}</small></button><button onclick="navigate('recipes')"><span>⚗</span><b>${t("Make something","ဖော်စပ်ကြည့်မယ်")}</b><small>${t("Step-by-step material recipes","အဆင့်လိုက် ဖော်စပ်နည်း")}</small></button><button onclick="navigate('theory')"><span>◈</span><b>${t("Understand colour","အရောင်ဘာသာဗေဒ")}</b><small>${t("Hue, value, chroma, schemes","Hue၊ value၊ chroma၊ schemes")}</small></button><button onclick="navigate('where')"><span>◒</span><b>${t("Use it well","မှန်ကန်စွာ အသုံးချမယ်")}</b><small>${t("Oil · Acrylic · Watercolor · Composition","Oil · Acrylic · Watercolor · Composition")}</small></button></div>`;}
 
-window.navigate = p=>{state.page=p;state.search="";state.selectedPigment=null;state.selectedRecipe=null;render();};
-window.setSearch = v=>{state.search=v;render();};
-window.setFilter = v=>{state.filter=v;render();};
-window.showPigment = id=>{state.selectedPigment=id;openPigmentModal(id)};
-window.showRecipe = id=>{state.selectedRecipe=id;state.recipeStep=0;openRecipeModal(id)};
-window.closeModal = ()=>{document.querySelectorAll(".modal-backdrop").forEach(x=>x.remove());state.selectedPigment=null;state.selectedRecipe=null;};
-window.recipeGo = i=>{state.recipeStep=i;document.querySelectorAll(".modal-backdrop").forEach(x=>x.remove());openRecipeModal(state.selectedRecipe)};
-window.addJournal = ()=>{
-  const name=document.querySelector("#jName")?.value.trim();
-  const date=document.querySelector("#jDate")?.value || new Date().toISOString().slice(0,10);
-  const notes=document.querySelector("#jNotes")?.value.trim();
-  if(!name||!notes)return;
-  state.journal.push({name,date,notes});persist();render();
-};
-window.deleteJournal = i=>{state.journal.splice(i,1);persist();render();};
-window.toggleMenu = ()=>document.body.classList.toggle("menu-open");
+function pigmentPage(){const q=state.search.toLowerCase();const list=allPigments.filter(p=>{const hay=`${p.name} ${p.family} ${p.hue} ${p.material} ${p.formula} ${p.behaviour}`.toLowerCase();const match=!q||hay.includes(q);const fam=state.filter==="all"||p.family.toLowerCase().includes(state.filter);const mode=state.pigmentMode==="all"||(state.pigmentMode==="chart"&&p.chart)||(state.pigmentMode==="natural"&&!p.chart);return match&&fam&&mode;});const families=[...new Set(allPigments.map(p=>p.family))];return `<div class="page-title"><div><div class="eyebrow">LIBRARY · ${allPigments.length} PROFILES</div><h1>${t("Pigment Library","Pigment စာကြည့်တိုက်")}</h1><p>${t("Natural pigment-making profiles plus an expanded artist pigment quality chart.","Natural pigment making profiles နဲ့ artist pigment quality chart ကို တစ်နေရာတည်းမှာ စုစည်းထားပါတယ်။")}</p></div><div class="count">${list.length}</div></div><div class="segbar"><button class="${state.pigmentMode==='all'?'sel':''}" onclick="setPigmentMode('all')">${t("All","အားလုံး")}</button><button class="${state.pigmentMode==='natural'?'sel':''}" onclick="setPigmentMode('natural')">${t("Making / Natural","Making / Natural")}</button><button class="${state.pigmentMode==='chart'?'sel':''}" onclick="setPigmentMode('chart')">${t("Artist Chart","Artist Chart")}</button></div><div class="filterbar"><button class="${state.filter==='all'?'sel':''}" onclick="setFilter('all')">All</button>${families.map(f=>`<button class="${state.filter===f.toLowerCase()?'sel':''}" onclick="setFilter('${f.toLowerCase()}')">${esc(f)}</button>`).join('')}</div><div class="pigment-grid">${list.map(p=>pigmentCard(p)).join('')}</div>`;}
+function pigmentCard(p){return `<button class="pigment-card" onclick="showPigment('${p.id}')"><div class="pigment-swatch" style="background:${p.hex}"><span>${esc(p.hue)}</span></div><div class="pigment-info"><div class="tag">${esc(p.family)}${p.chart?' · CHART':''}</div><h3>${esc(p.name)}</h3><p>${esc(p.material)}</p><div class="mini-spec"><span>${esc(p.transparency||p.formula)}</span><span>→</span></div></div></button>`;}
 
+function recipePage(){const q=state.search.toLowerCase();const list=recipes.filter(r=>!q||`${r.title} ${r.pigment} ${r.type} ${r.chapter} ${r.science}`.toLowerCase().includes(q));return `<div class="page-title"><div><div class="eyebrow">WORKBENCH</div><h1>${t("Recipe Lab","Pigment ဖော်စပ်ခန်း")}</h1><p>${t("Interactive making cards. Start small, observe, record, repeat.","အဆင့်လိုက် ဖော်စပ်နည်း။ နည်းနည်းစလုပ်၊ စောင့်ကြည့်၊ မှတ်တမ်းတင်၊ ပြန်စမ်းပါ။")}</p></div><div class="count">${list.length} recipes</div></div><div class="recipe-list">${list.map((r,i)=>recipeRow(r,i)).join('')}</div>`;}
+function recipeRow(r,i){const chapter=chapters.find(c=>c.id===r.chapter);return `<button class="recipe-row" onclick="showRecipe('${r.id}')"><div class="recipe-num">${String(i+1).padStart(2,'0')}</div><div class="recipe-main"><div class="tag">${esc(r.type)} · ${esc(chapter?.title||'')}</div><h3>${esc(r.title)}</h3><p>${esc(r.pigment)}</p></div><div class="recipe-meta"><span>${esc(r.difficulty)}</span><span>${esc(r.duration)}</span><b>→</b></div></button>`;}
+
+function historyPage(){return `<div class="page-title"><div><div class="eyebrow">CHRONOLOGY</div><h1>${t("Pigment History","Pigment သမိုင်းကြောင်း")}</h1><p>${t("A layered timeline combining the attached books with the open pigment reference.","ပေးထားတဲ့စာအုပ်တွေနဲ့ open pigment reference ကို ပေါင်းစပ်ထားတဲ့ သမိုင်း timeline ပါ။")}</p></div></div><div class="timeline"><div class="time-item"><div class="time-date">PREHISTORY</div><div><h3>Earth, charcoal, minerals</h3><p>${t("Early colour practice relied on locally available earths, minerals and carbon-rich materials.","အစောပိုင်းအရောင်ဖော်စပ်မှုတွေမှာ အနီးအနားရနိုင်တဲ့ မြေသား၊ သတ္တုနဲ့ carbon ပါဝင်တဲ့ ပစ္စည်းတွေကို အသုံးပြုခဲ့ပါတယ်။")}</p></div></div><div class="time-item"><div class="time-date">~4700+ YEARS AGO</div><div><h3>Egyptian Blue</h3><p>${t("The CPMA reference describes an early synthetic inorganic pigment made by heating sand, copper-bearing minerals and a sodium source; the resulting material is calcium copper silicate.","CPMA reference အရ သဲ၊ copper ပါဝင်တဲ့ mineral နဲ့ sodium source တွေကို အပူပေးပြီး calcium copper silicate ဖြစ်တဲ့ Egyptian Blue ကို ထုတ်လုပ်ခဲ့တဲ့ ရှေးဟောင်း synthetic inorganic pigment ရှိပါတယ်။")}</p></div></div><div class="time-item"><div class="time-date">ANCIENT → MEDIEVAL</div><div><h3>Mineral colour & trade</h3><p>${t("Ochres, lapis lazuli, azurite, malachite and other mineral colours became part of long-distance material cultures.","Ochre၊ lapis lazuli၊ azurite၊ malachite စတဲ့ mineral colours တွေဟာ အနုပညာနဲ့ ကုန်သွယ်ရေးသမိုင်းထဲမှာ အရေးပါလာပါတယ်။")}</p></div></div><div class="time-item"><div class="time-date">1700s</div><div><h3>Prussian Blue & synthetic colour</h3><p>${t("The history of modern synthetic pigments accelerates; Prussian blue is a landmark example of chemically produced artist colour.","Modern synthetic pigment သမိုင်းမှာ Prussian Blue က ဓါတုနည်းနဲ့ ထုတ်လုပ်နိုင်တဲ့ အရေးကြီးတဲ့ landmark တစ်ခုဖြစ်လာပါတယ်။")}</p></div></div><div class="time-item"><div class="time-date">1800s → 1900s</div><div><h3>Industrial colour expands the palette</h3><p>${t("Synthetic organic and inorganic pigment chemistry expands the artist's palette and improves reproducibility, brilliance and permanence for many colours.","Synthetic organic/inorganic chemistry တိုးတက်လာတာနဲ့အမျှ အရောင်ရွေးချယ်စရာ၊ reproducibility၊ brilliance နဲ့ permanence တွေ တိုးတက်လာပါတယ်။")}</p></div></div><div class="time-item"><div class="time-date">TODAY</div><div><h3>Natural + synthetic + responsible practice</h3><p>${t("Artists can work across geological pigments, natural dyes and lakes, modern synthetic pigments, and increasingly material-conscious approaches.","ယနေ့မှာ geological pigment၊ natural dye/lake၊ modern synthetic pigment နဲ့ material-conscious practice တွေကို အတူတကွ လေ့လာအသုံးချနိုင်ပါတယ်။")}</p></div></div></div><div class="quote-card"><span>SOURCE LAYER</span><p>${t("The point is not to replace the original handbook; it is to connect making, history, chemistry and colour use into one reference system.","မူရင်း handbook ကို အစားထိုးဖို့မဟုတ်ပါဘူး။ Making၊ history၊ chemistry နဲ့ colour use ကို reference system တစ်ခုထဲ ချိတ်ဆက်ဖို့ပါ။")}</p></div>`;}
+
+function chemistryPage(){const concepts=[["01","Pigment vs Dye","A pigment is generally insoluble in its working medium; a dye is soluble. Lakes can transform soluble colourants into insoluble pigment particles."],["02","Crystal & particle structure","Pigment behaviour depends on crystal form, particle size, morphology and dispersion. The same chemical identity can behave differently in different physical forms."],["03","Light scattering","Pigments alter appearance through selective absorption and scattering. Refractive index difference between pigment and binder strongly affects scattering and opacity."],["04","Laking","A soluble dye can be fixed onto an inorganic substrate through precipitation and salt chemistry, creating an insoluble lake pigment."],["05","Organic / inorganic","Inorganic pigments include earths, metal oxides and complex inorganic colour systems; organic pigments include azo, phthalocyanine, quinacridone, perylene and related families."],["06","Binder & medium","Gum arabic, acrylic polymer and drying oils hold pigment particles in paint. The binder changes flow, gloss, drying, transparency and final appearance."],["07","Lightfastness","Lightfastness describes resistance to fading under light, particularly UV. Professional colour systems often report an ASTM rating."],["08","Dispersion","Pigment particles are dispersed into a binder. Poor dispersion, agglomeration or unsuitable processing can change colour strength, opacity and stability."]];return `<div class="page-title"><div><div class="eyebrow">MATERIAL SCIENCE · CPMA + BOOKS</div><h1>${t("The chemistry behind colour","အရောင်နောက်က ဓါတုဗေဒ")}</h1><p>${t("A clearer bridge between pigment particles, chemistry and what the painter actually sees.","Pigment particle၊ chemistry နဲ့ ပန်းချီဆရာမြင်ရတဲ့ အရောင်ကြားက ဆက်စပ်မှုကို ရှင်းပြထားပါတယ်။")}</p></div></div><div class="chem-grid">${concepts.map(c=>`<article class="chem-card"><span>${c[0]}</span><h3>${c[1]}</h3><p>${c[2]}</p></article>`).join('')}</div><section class="process-strip"><div><b>RAW MATERIAL</b><span>earth · plant · mineral · synthetic</span></div><i>→</i><div><b>PROCESS</b><span>grind · wash · heat · extract · react</span></div><i>→</i><div><b>PIGMENT</b><span>particle · crystal · colour</span></div><i>→</i><div><b>PAINT</b><span>pigment + binder + support</span></div></section>`;}
+
+function wherePage(){return `<div class="page-title"><div><div class="eyebrow">PRACTICAL COLOUR LANGUAGE</div><h1>${t("Where to Use","ဘယ်မှာ သုံးမလဲ")}</h1><p>${t("Turn pigment properties and colour theory into painting decisions.","Pigment properties နဲ့ colour theory ကို တကယ့်ပန်းချီဆုံးဖြတ်ချက်တွေအဖြစ် ပြောင်းသုံးဖို့ ဒီအပိုင်းကို သုံးပါ။")}</p></div></div><div class="use-grid">${whereToUse.map(x=>`<article class="use-card"><div class="tag">${esc(x.media)}</div><h3>${esc(t(x.title,x.mmTitle))}</h3><p>${esc(t(x.text,x.mm))}</p><ul>${x.tips.map(v=>`<li>${esc(v)}</li>`).join('')}</ul></article>`).join('')}</div>`;}
+function theoryPage(){return `<div class="page-title"><div><div class="eyebrow">COLOR LANGUAGE</div><h1>${t("Color Theory","အရောင်ဘာသာဗေဒ")}</h1><p>${t("A working reference for hue, value, chroma, temperature and harmony.","Hue၊ value၊ chroma၊ temperature နဲ့ color harmony အတွက် လက်တွေ့ reference ပါ။")}</p></div></div><div class="wheel-wrap"><div class="color-wheel"><span>RED</span><span>ORANGE</span><span>YELLOW</span><span>GREEN</span><span>BLUE</span><span>VIOLET</span></div><div><h2>${t("The 12-hue idea","12-hue color wheel")}</h2><p>${t("Primary, secondary and tertiary relationships help artists mix, compare and design palettes. Complements create maximum hue contrast; analogous colours create unity.","Primary၊ secondary၊ tertiary ဆက်နွယ်မှုတွေက palette ရွေးချယ်ခြင်းနဲ့ mixing ကို ကူညီပါတယ်။ Complementary က hue contrast အများဆုံးပေးပြီး analogous က unity ဖန်တီးပေးပါတယ်။")}</p></div></div><div class="theory-grid">${colorTheory.map(c=>`<article class="theory-card"><h3>${esc(c[0])}</h3><p>${esc(state.language==='mm'?c[2]:c[1])}</p><small>${esc(state.language==='mm'?c[1]:c[2])}</small></article>`).join('')}</div><div class="scheme-grid"><div><b>MONOCHROMATIC</b><span>one hue + tints / tones / shades</span></div><div><b>ANALOGOUS</b><span>neighbouring hues</span></div><div><b>COMPLEMENTARY</b><span>opposite hues</span></div><div><b>TRIADIC</b><span>three evenly spaced hues</span></div><div><b>SPLIT COMPLEMENTARY</b><span>base + neighbours of complement</span></div><div><b>TETRAD</b><span>two complementary pairs</span></div></div>`;}
+
+function journalPage(){return `<div class="page-title"><div><div class="eyebrow">YOUR WORKBENCH</div><h1>${t("My Pigment Journal","ကိုယ်ပိုင် Pigment မှတ်တမ်း")}</h1><p>${t("Record experiments locally in this browser. Nothing is uploaded.","စမ်းသပ်မှုတွေကို ဒီ browser ထဲမှာပဲ သိမ်းထားပါတယ်။ Upload မလုပ်ပါဘူး။")}</p></div></div><div class="journal-form"><input id="jName" placeholder="Batch / pigment name"/><input id="jDate" type="date" value="${new Date().toISOString().slice(0,10)}"/><textarea id="jNotes" placeholder="Material source, quantities, temperature, pH, colour, texture, what happened..."></textarea><button class="primary" onclick="addJournal()">${t("Save batch","Batch သိမ်းမယ်")}</button></div><div class="journal-list">${state.journal.length?state.journal.slice().reverse().map((j,i)=>`<article class="journal-entry"><div><span>${esc(j.date)}</span><h3>${esc(j.name)}</h3></div><p>${esc(j.notes)}</p><button onclick="deleteJournal(${state.journal.length-1-i})">×</button></article>`).join(''):`<div class="empty">${t("Your first pigment experiment will appear here.","ပထမဆုံး pigment စမ်းသပ်မှုကို ဒီမှာတွေ့ရပါမယ်။")}</div>`}</div>`;}
+function glossaryPage(){return `<div class="page-title"><div><div class="eyebrow">REFERENCE</div><h1>${t("Glossary","ဝေါဟာရ")}</h1><p>${t("Small definitions for the language of pigment making and colour.","Pigment making နဲ့ colour language အတွက် အခြေခံဝေါဟာရများ။")}</p></div></div><div class="glossary">${glossary.map(([a,b])=>`<article><h3>${esc(a)}</h3><p>${esc(b)}</p></article>`).join('')}</div>`;}
+function safetyPage(){return `<div class="page-title"><div><div class="eyebrow">READ BEFORE MAKING</div><h1>${t("Safety & Responsible Practice","လုံခြုံရေးနဲ့ တာဝန်ယူမှု")}</h1><p>${t("Natural does not automatically mean harmless.","Natural ဖြစ်တာနဲ့ အန္တရာယ်မရှိဘူးလို့ မဆိုလိုပါဘူး။")}</p></div></div><div class="warning-box"><strong>⚠ WORK SMALL · WORK CLEAN · RECORD EVERYTHING</strong><p>${t("Some processes involve heat, dust, alkaline solutions, acids, metal salts or copper compounds. Use appropriate PPE and ventilation, and never use food equipment.","တချို့ process တွေမှာ အပူ၊ ဖုန်မှုန့်၊ alkaline solution၊ acid၊ metal salt နဲ့ copper compound တွေ ပါနိုင်ပါတယ်။ PPE နဲ့ ventilation သုံးပြီး အစားအသောက်ပစ္စည်းတွေကို မသုံးပါနဲ့။")}</p></div><div class="safety-list">${safety.map((s,i)=>`<div><b>${String(i+1).padStart(2,'0')}</b><p>${esc(s)}</p></div>`).join('')}</div>`;}
+function sourcesPage(){return `<div class="page-title"><div><div class="eyebrow">REFERENCE NETWORK</div><h1>${t("Sources","ရင်းမြစ်များ")}</h1><p>${t("The app is deliberately no longer based on one book alone.","ဒီ App ကို စာအုပ်တစ်အုပ်တည်းပေါ် မမှီခိုတော့ဘဲ ရင်းမြစ်အမျိုးမျိုးကို ချိတ်ဆက်ထားပါတယ်။")}</p></div></div><div class="source-grid">${sources.map(s=>`<article class="source-card"><div class="tag">${esc(s.kind)}</div><h3>${esc(s.title)}</h3><p>${esc(s.note)}</p>${s.url?`<a href="${esc(s.url)}" target="_blank" rel="noopener">Open source →</a>`:''}</article>`).join('')}</div><div class="source-note">${t("Source-derived material is summarized and structured for study; it is not intended as a page-by-page reproduction of any book.","စာအုပ်တွေထဲက အချက်အလက်တွေကို study အတွက် အကျဉ်းချုပ်၊ structure ပြန်လုပ်ထားတာဖြစ်ပြီး စာအုပ်တစ်အုပ်ကို page-by-page ပြန်ကူးထားတာ မဟုတ်ပါ။")}</div>`;}
+
+function openPigmentModal(id){const p=allPigments.find(x=>x.id===id);if(!p)return;const related=recipes.filter(r=>r.pigment.toLowerCase().includes(p.name.toLowerCase().split(" / ")[0].toLowerCase())||r.title.toLowerCase().includes(p.name.toLowerCase().split(" ")[0].toLowerCase()));const el=document.createElement('div');el.className='modal-backdrop';el.onclick=e=>{if(e.target===el)closeModal()};el.innerHTML=`<div class="modal"><button class="close" onclick="closeModal()">×</button><div class="modal-swatch" style="background:${p.hex}"></div><div class="tag">${esc(p.family)} · ${esc(p.hue)}</div><h2>${esc(p.name)}</h2><p class="lead">${esc(p.material)}</p><div class="modal-specs"><div><span>CHEMISTRY / TYPE</span><b>${esc(p.formula)} · ${esc(p.type||'')}</b></div><div><span>BEHAVIOUR</span><b>${esc(p.behaviour)}</b></div>${p.chart?`<div><span>QUALITY CHART</span><b>Transparency: ${esc(p.transparency)} · Staining: ${esc(p.staining)} · ASTM: ${esc(p.lightfastness)}</b></div>`:''}<div><span>TRANSFORMATION</span><b>${esc(p.transformation)}</b></div><div><span>HISTORY</span><b>${esc(p.history)}</b></div></div><div class="modal-section"><h3>Source</h3><p>${esc(p.source)}</p></div>${related.length?`<div class="modal-section"><h3>Related making</h3>${related.map(r=>`<button class="related" onclick="closeModal();showRecipe('${r.id}')">${esc(r.title)} →</button>`).join('')}</div>`:''}</div>`;document.body.appendChild(el);}
+function openRecipeModal(id){const r=recipes.find(x=>x.id===id);if(!r)return;const chapter=chapters.find(c=>c.id===r.chapter);const step=Math.min(state.recipeStep,r.steps.length-1);const el=document.createElement('div');el.className='modal-backdrop';el.onclick=e=>{if(e.target===el)closeModal()};el.innerHTML=`<div class="modal recipe-modal"><button class="close" onclick="closeModal()">×</button><div class="eyebrow">${esc(r.type)} · ${esc(chapter?.title||'')}</div><h2>${esc(r.title)}</h2><p class="lead">${esc(r.pigment)}</p><div class="risk-line"><span>${esc(r.difficulty)}</span><span>${esc(r.duration)}</span><span>⚠ ${esc(r.risk)}</span></div><div class="recipe-cols"><aside><h3>Ingredients</h3><ul>${r.ingredients.map(x=>`<li>${esc(x)}</li>`).join('')}</ul><h3>Equipment</h3><ul>${r.equipment.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></aside><section><div class="science-note"><b>WHY IT WORKS</b><p>${esc(r.science)}</p></div><div class="stepper"><div class="step-count">STEP ${String(step+1).padStart(2,'0')} / ${String(r.steps.length).padStart(2,'0')}</div><h3>${esc(r.steps[step])}</h3><div class="progress">${r.steps.map((_,i)=>`<button class="${i<=step?'done':''}" onclick="recipeGo(${i})"></button>`).join('')}</div><div class="step-actions"><button ${step===0?'disabled':''} onclick="recipeGo(${step-1})">← Previous</button><button ${step===r.steps.length-1?'disabled':''} onclick="recipeGo(${step+1})">Next →</button></div></div><div class="source-note">${esc(r.note)}</div></section></div></div>`;document.body.appendChild(el);}
+
+window.navigate=p=>{state.page=p;state.search="";state.selectedPigment=null;state.selectedRecipe=null;render();};
+window.setSearch=v=>{state.search=v;render();};
+window.setFilter=v=>{state.filter=v;render();};
+window.setPigmentMode=v=>{state.pigmentMode=v;state.filter='all';render();};
+window.toggleLanguage=()=>{state.language=state.language==='en'?'mm':'en';localStorage.setItem('pigment-lab-language',state.language);render();};
+window.showPigment=id=>{state.selectedPigment=id;openPigmentModal(id);};
+window.showRecipe=id=>{state.selectedRecipe=id;state.recipeStep=0;openRecipeModal(id);};
+window.closeModal=()=>{document.querySelectorAll('.modal-backdrop').forEach(x=>x.remove());state.selectedPigment=null;state.selectedRecipe=null;};
+window.recipeGo=i=>{state.recipeStep=i;document.querySelectorAll('.modal-backdrop').forEach(x=>x.remove());openRecipeModal(state.selectedRecipe);};
+window.addJournal=()=>{const name=document.querySelector('#jName')?.value.trim();const date=document.querySelector('#jDate')?.value||new Date().toISOString().slice(0,10);const notes=document.querySelector('#jNotes')?.value.trim();if(!name||!notes)return;state.journal.push({name,date,notes});persist();render();};
+window.deleteJournal=i=>{state.journal.splice(i,1);persist();render();};
+window.toggleMenu=()=>document.body.classList.toggle('menu-open');
 render();

@@ -593,6 +593,68 @@ export const recipes = [
   }
 ];
 
+
+export const colorPigmentChart = [
+  {name:"Alizarin crimson",family:"Red",color:"blue-leaning red",type:"organic",transparency:"transparent",staining:"high",lightfastness:"II or III"},
+  {name:"Cadmium red",family:"Red",color:"yellow-leaning red",type:"inorganic",transparency:"opaque",staining:"low",lightfastness:"I"},
+  {name:"Quinacridone red",family:"Red",color:"blue-leaning red",type:"synthetic organic",transparency:"transparent",staining:"high",lightfastness:"I"},
+  {name:"Naphthol red",family:"Red",color:"yellow-leaning red",type:"synthetic organic",transparency:"semi-opaque",staining:"high",lightfastness:"I"},
+  {name:"Perylene red",family:"Red",color:"slightly blue-leaning red",type:"synthetic organic",transparency:"transparent",staining:"medium",lightfastness:"I"},
+  {name:"Pyrrole red",family:"Red",color:"yellow-leaning red",type:"synthetic organic",transparency:"semi-opaque",staining:"high",lightfastness:"I"},
+  {name:"Dioxazine purple",family:"Purple",color:"blue-leaning violet",type:"synthetic organic",transparency:"transparent",staining:"high",lightfastness:"I"},
+  {name:"Quinacridone violet / Quinacridone magenta",family:"Purple",color:"red-leaning violet",type:"synthetic organic",transparency:"transparent",staining:"medium",lightfastness:"I"},
+  {name:"Ultramarine blue",family:"Blue",color:"red-leaning blue",type:"inorganic",transparency:"semi-transparent",staining:"low",lightfastness:"I"},
+  {name:"Phthalo blue",family:"Blue",color:"yellow-leaning or red-leaning",type:"synthetic organic",transparency:"transparent",staining:"high",lightfastness:"I"},
+  {name:"Manganese blue",family:"Blue",color:"yellow-leaning blue",type:"inorganic",transparency:"transparent",staining:"high",lightfastness:"I"},
+  {name:"Cobalt blue",family:"Blue",color:"slightly yellow-leaning blue",type:"inorganic",transparency:"semi-transparent",staining:"low",lightfastness:"I"},
+  {name:"Cerulean blue",family:"Blue",color:"yellow-leaning blue",type:"inorganic",transparency:"semi-transparent",staining:"low",lightfastness:"I"},
+  {name:"Phthalo green",family:"Green",color:"blue-leaning green",type:"synthetic organic",transparency:"transparent",staining:"high",lightfastness:"I"},
+  {name:"Cobalt green",family:"Green",color:"yellow-leaning green",type:"inorganic",transparency:"semi-transparent",staining:"low",lightfastness:"I"},
+  {name:"Terre verte",family:"Green",color:"olive green",type:"inorganic",transparency:"transparent",staining:"low",lightfastness:"I"},
+  {name:"Viridian",family:"Green",color:"blue-leaning green",type:"inorganic",transparency:"transparent",staining:"low",lightfastness:"I"},
+  {name:"Aureolin",family:"Yellow",color:"primary yellow",type:"inorganic",transparency:"transparent",staining:"low",lightfastness:"II"},
+  {name:"Hansa yellow / Lemon yellow",family:"Yellow",color:"bright blue-leaning yellow",type:"synthetic organic",transparency:"semi-transparent",staining:"low to medium",lightfastness:"II"},
+  {name:"Nickel azo yellow",family:"Yellow",color:"brownish yellow",type:"synthetic organic",transparency:"transparent",staining:"medium",lightfastness:"I"},
+  {name:"Cadmium yellow",family:"Yellow",color:"red-leaning yellow",type:"inorganic",transparency:"opaque",staining:"low",lightfastness:"I"},
+  {name:"Burnt sienna",family:"Earth",color:"red-leaning brown",type:"inorganic",transparency:"transparent",staining:"low",lightfastness:"I"},
+  {name:"Burnt umber",family:"Earth",color:"red-leaning brown",type:"inorganic",transparency:"transparent",staining:"low",lightfastness:"I"},
+  {name:"Raw sienna",family:"Earth",color:"yellow-leaning brown",type:"inorganic",transparency:"transparent",staining:"low",lightfastness:"I"},
+  {name:"Raw umber",family:"Earth",color:"varied; often gray-or green-leaning brown",type:"inorganic",transparency:"transparent",staining:"low",lightfastness:"I"},
+  {name:"Yellow ochre",family:"Earth",color:"orange-leaning yellow",type:"inorganic",transparency:"opaque",staining:"low",lightfastness:"I"},
+  {name:"Ivory or bone black",family:"Black",color:"warm black",type:"inorganic",transparency:"semi-transparent",staining:"high",lightfastness:"I"},
+  {name:"Mars black",family:"Black",color:"cool black",type:"inorganic",transparency:"opaque",staining:"high",lightfastness:"I"},
+  {name:"Titanium white",family:"White",color:"blue-leaning white",type:"inorganic",transparency:"opaque",staining:"N/A",lightfastness:"I"},
+  {name:"Zinc white / Chinese white",family:"White",color:"blue-leaning white",type:"inorganic",transparency:"semi-opaque",staining:"N/A",lightfastness:"I"}
+];
+
+export const whereToUse = [
+  {id:"watercolor",media:"Watercolor",title:"Watercolor language",mmTitle:"Watercolor မှာ အသုံးချနည်း",text:"Use transparency, staining behaviour, granulation and water-to-pigment ratio as primary decisions. Transparent colours are especially useful for luminous washes and glazing; staining colours are harder to lift.",mm:"Watercolor မှာ transparency၊ staining နဲ့ granulation ကို အဓိကစဉ်းစားပါ။ Transparent pigment တွေက wash/glaze အတွက်ကောင်းပြီး staining pigment တွေက စက္ကူပေါ်ကနေ ပြန်ဖယ်ရခက်ပါတယ်။",tips:["Transparent pigments → luminous washes / glazing","Staining pigments → decisive colour passages","Granulating pigments → texture, atmosphere, mineral effects","Warm/cool pairs → depth and colour temperature"]},
+  {id:"acrylic",media:"Acrylic",title:"Acrylic language",mmTitle:"Acrylic မှာ အသုံးချနည်း",text:"Acrylic supports direct mixing, palette-knife work, layering and glazing. Use opaque colours for coverage and focal passages; transparent colours can build luminous layers.",mm:"Acrylic မှာ palette ပေါ်တိုက်ရိုက်ရောစပ်ခြင်း၊ palette knife၊ layer နဲ့ glaze တွေကို လွယ်လွယ်ကူကူ အသုံးချနိုင်ပါတယ်။ Opaque pigment က coverage ကောင်းပြီး transparent pigment က luminous layer တည်ဆောက်ဖို့ သင့်တော်ပါတယ်။",tips:["Opaque → block-in / foreground / highlights","Transparent → glazing / colour unity","Palette knife → thick, graphic, broken colour","Dry between glazes → cleaner layered colour"]},
+  {id:"oil",media:"Oil",title:"Oil language",mmTitle:"Oil Painting မှာ အသုံးချနည်း",text:"Oil paint is slow-drying and luminous. Build colour through mixtures, scumbling and glazes; judge value and temperature alongside hue.",mm:"Oil paint က ခြောက်ချိန်နှေးပြီး luminous ဖြစ်ပါတယ်။ Mixture၊ scumbling၊ glaze တွေနဲ့ အရောင်တည်ဆောက်နိုင်ပြီး hue တစ်ခုတည်းမဟုတ်ဘဲ value နဲ့ temperature ကိုပါ တစ်ပြိုင်နက်ကြည့်ပါ။",tips:["Transparent pigments → deep glazes","Opaque pigments → body colour / lights","Warm-cool contrast → focus and spatial depth","Neutral + saturated colour → hierarchy"]},
+  {id:"landscape",media:"Application",title:"Landscape & atmosphere",mmTitle:"Landscape နဲ့ အလင်းအဝေး",text:"Foreground colours can be warmer, brighter and more detailed. Distant objects generally become cooler, bluer/greyer, lower in contrast and less detailed.",mm:"ရှေ့ပိုင်းမှာ အရောင်ပိုတောက်၊ ပိုနွေးပြီး detail ပိုများနိုင်ပါတယ်။ အဝေးသွားလေလေ အရောင်က ပိုအေး၊ ပိုပြာ/မီးခိုးဆန်၊ contrast နည်းပြီး detail လျော့သွားစေခြင်းက atmospheric depth ကို ဖန်တီးပေးပါတယ်။",tips:["Foreground → brighter / warmer / higher contrast","Distance → cooler / muted / lower contrast","Warm light → often cooler shadows","Cool light → often warmer shadows"]},
+  {id:"composition",media:"Application",title:"Composition & focal point",mmTitle:"Composition မှာ အရောင်သုံးနည်း",text:"Value, edge, chroma and temperature contrast can direct the viewer's eye. A bright saturated accent can command attention when surrounded by quieter colour.",mm:"Value၊ edge၊ chroma နဲ့ temperature contrast တွေကို အသုံးချပြီး ကြည့်သူရဲ့မျက်စိကို focal point ဆီ ဦးတည်နိုင်ပါတယ်။ အရောင်တောက်တောက်တစ်စက်ကို muted field ထဲ ထားရင် အာရုံစိုက်မှု တိုးလာနိုင်ပါတယ်။",tips:["Light next to dark → value focus","Crisp edge → visual focus","Saturated next to neutral → chroma focus","Warm inside cool field → temperature focus"]},
+  {id:"mixing",media:"Mixing",title:"Mixing intelligence",mmTitle:"အရောင်ရောစပ်ရာမှာ",text:"Limit complex mixtures. The source recommends two or three pigments as a useful starting discipline, because too many pigments can produce muddy results.",mm:"အရောင်ရောစပ်ရာမှာ pigment နှစ်မျိုး၊ သုံးမျိုးကနေ စတင်တာက ရလဒ်ကို ရှင်းလင်းစေပါတယ်။ Pigment များလွန်းရင် အရောင်ညစ်သွားနိုင်ပါတယ်။",tips:["Warm + cool primaries expand mixing range","Complementary colours can neutralize","Ratios matter as much as pigment choice","Always make a small swatch before committing"]}
+];
+
+export const colorTheory = [
+  ["Hue","The colour family: red, yellow, green, blue, violet, etc.","Hue ဆိုတာ အရောင်မိသားစုကို ဆိုလိုပါတယ် — အနီ၊ အဝါ၊ အစိမ်း၊ အပြာ၊ ခရမ်း စသည်ဖြင့်။"],
+  ["Saturation / Chroma","How brilliant or muted a colour appears.","Saturation/Chroma က အရောင်ရဲ့ တောက်ပမှုနဲ့ ညစ်မှိုင်းမှုအဆင့်ကို ဖော်ပြပါတယ်။"],
+  ["Value","The lightness or darkness of a colour.","Value က အရောင်ရဲ့ အလင်း/အမှောင် အဆင့်ပါ။ ပန်းချီဖတ်ရလွယ်မလွယ်အတွက် အလွန်အရေးကြီးပါတယ်။"],
+  ["Temperature","Warm and cool relationships affect depth, focus and mood.","Warm/Cool temperature က နေရာအဝေးအနီး၊ focal point နဲ့ mood ကို ပြောင်းလဲစေပါတယ်။"],
+  ["Complementary","Colours opposite each other on the wheel; strong contrast and useful for neutralizing.","Color wheel ပေါ်မှာ ဆန့်ကျင်ဘက်နေရာက အရောင်နှစ်ခုပါ။ Contrast ပြင်းပြီး neutralization အတွက် အသုံးဝင်ပါတယ်။"],
+  ["Analogous","Neighbouring hues that create unity.","ဘေးချင်းကပ် hue တွေကို တွဲသုံးတာဖြစ်ပြီး harmony နဲ့ unity ကောင်းစေပါတယ်။"],
+  ["Monochromatic","One hue with its tints, tones and shades.","Hue တစ်မျိုးတည်းကို tint၊ tone၊ shade အမျိုးမျိုးနဲ့ တည်ဆောက်တာပါ။"],
+  ["Triadic","Three hues spaced evenly around the wheel.","Color wheel ပေါ်မှာ အကွာအဝေးညီတဲ့ hue သုံးမျိုးကို အသုံးပြုတဲ့ scheme ပါ။"],
+  ["Split Complementary","A base hue plus the two neighbours of its complement.","မူလ hue တစ်ခုနဲ့ complementary ရဲ့ ဘေးနှစ်ဖက် hue နှစ်ခုကို တွဲသုံးတဲ့ scheme ပါ။"],
+  ["Tetrad","Two hue pairs and their complements; requires hierarchy.","Hue နှစ်စုံနဲ့ complementary ဆက်စပ်မှုတွေကို သုံးတာဖြစ်လို့ dominant colour သတ်မှတ်ဖို့လိုပါတယ်။"]
+];
+
+export const sources = [
+  {title:"The Natural Pigment Handbook — Lucy Mayes",kind:"Book / attached source",note:"Primary making, pigment-process, material and historical study source supplied in the project."},
+  {title:"Color: A Practical Guide to Color and Its Uses in Art",kind:"Book / attached source",note:"Color theory, pigment chart, mixing, psychology, composition and medium-specific painting practice."},
+  {title:"Colour Pigment Manufacturers’ Association — pigments.org",kind:"Open web reference",url:"https://www.pigments.org/",note:"Pigment definition, organic/inorganic classification, historical development, lakes, crystal structure, dispersion and industrial pigment chemistry."}
+];
+
 export const glossary = [
   ["Pigment", "A finely divided colouring material that is generally insoluble in the medium in which it is used."],
   ["Dye", "A colourant that is soluble in the relevant medium; laking can convert a soluble dye into an insoluble pigment."],
